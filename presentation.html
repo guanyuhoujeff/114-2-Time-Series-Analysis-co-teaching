@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時間序列分析 — AI 融入學術研究 × Vibe Coding 實作</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+.slide { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; scroll-snap-align: start; display: flex; flex-direction: column; position: relative; }
+:root {
+  --title-size: clamp(1.8rem, 4.5vw, 3.2rem);
+  --h2-size: clamp(1.3rem, 3vw, 2.2rem);
+  --h3-size: clamp(1rem, 2.2vw, 1.5rem);
+  --body-size: clamp(0.75rem, 1.4vw, 1.05rem);
+  --small-size: clamp(0.6rem, 1vw, 0.82rem);
+  --code-size: clamp(0.6rem, 1.1vw, 0.88rem);
+  --slide-padding: clamp(1.5rem, 5vw, 5rem);
+  --content-gap: clamp(0.5rem, 2vw, 1.8rem);
+  --element-gap: clamp(0.25rem, 1vw, 0.8rem);
+  --warm-bg: #F5F3EF; --warm-bg2: #EDE9E3;
+  --dark: #3D3D3D; --dark-soft: #5A5A5A;
+  --sage: #8B9D77; --sage-light: #A8B896; --sage-bg: #EEF2EA; --accent: #6B7F5B;
+  --card-bg: rgba(255,255,255,0.75); --card-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  --white: #FFFFFF;
+  --red: #C0392B; --red-bg: #FDECEA;
+  --green: #27AE60; --green-bg: #E8F8F0;
+  --blue: #5B7F9D; --blue-bg: #EAF0F5;
+}
+body { font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif; color: var(--dark); background: var(--warm-bg); line-height: 1.8; }
+.slide-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--slide-padding); text-align: center; }
+.slide-content { display: flex; flex-direction: column; justify-content: center; padding: var(--slide-padding); gap: var(--content-gap); }
+.slide-split { display: flex; flex-direction: row; flex: 1; }
+.slide-split .panel { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: var(--slide-padding); position: relative; }
+.panel-warm { background: var(--warm-bg); } .panel-sage { background: var(--sage-bg); }
+.panel-white { background: var(--white); } .panel-dark { background: var(--dark); color: var(--white); }
+h1 { font-size: var(--title-size); font-weight: 300; line-height: 1.25; letter-spacing: -0.02em; }
+h2 { font-size: var(--h2-size); font-weight: 400; line-height: 1.3; letter-spacing: -0.01em; }
+h3 { font-size: var(--h3-size); font-weight: 500; line-height: 1.4; }
+p, li { font-size: var(--body-size); line-height: 1.8; color: var(--dark-soft); }
+.subtitle { font-size: var(--h3-size); font-weight: 300; color: var(--dark-soft); margin-top: 0.5em; }
+.label { font-size: var(--small-size); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage); margin-bottom: 0.5em; }
+.big-number { font-size: clamp(3rem, 10vw, 8rem); font-weight: 300; color: var(--sage); line-height: 1; }
+strong { font-weight: 600; color: var(--dark); }
+em { font-style: normal; color: var(--sage); font-weight: 500; }
+.card { background: var(--card-bg); border-radius: 16px; padding: clamp(1rem, 2vw, 1.8rem); box-shadow: var(--card-shadow); backdrop-filter: blur(10px); }
+.card-row { display: flex; gap: var(--element-gap); flex-wrap: wrap; }
+.card-row .card { flex: 1; min-width: 180px; }
+.card-red { background: var(--red-bg); border-left: 3px solid var(--red); }
+.card-green { background: var(--green-bg); border-left: 3px solid var(--green); }
+.card-sage { background: var(--sage-bg); border-left: 3px solid var(--sage); }
+.card-blue { background: var(--blue-bg); border-left: 3px solid var(--blue); }
+.code-block { background: #2D2D2D; color: #E0E0E0; border-radius: 12px; padding: clamp(0.6rem, 1.5vw, 1.2rem); font-family: 'SF Mono', 'Fira Code', monospace; font-size: var(--code-size); line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.code-block .comment { color: #7C9C6B; } .code-block .keyword { color: #C792EA; } .code-block .string { color: #C3E88D; }
+.quote-block { border-left: 3px solid var(--sage); padding: 0.8em 1.2em; background: var(--sage-bg); border-radius: 0 12px 12px 0; font-size: var(--body-size); color: var(--dark); }
+.quote-block em { font-style: italic; color: var(--accent); }
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--small-size); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); }
+th { background: var(--sage); color: white; padding: 0.6em 0.8em; text-align: left; font-weight: 500; }
+td { padding: 0.5em 0.8em; background: white; border-bottom: 1px solid #EEE; }
+tr:last-child td { border-bottom: none; }
+.compare-row { display: flex; gap: var(--element-gap); align-items: stretch; }
+.compare-col { flex: 1; min-width: 0; }
+ul, ol { padding-left: 1.5em; } li { margin-bottom: 0.3em; } li::marker { color: var(--sage); }
+.section-divider { background: var(--dark); color: var(--white); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.section-divider h1 { color: var(--white); font-weight: 300; }
+.section-divider .label { color: var(--sage-light); }
+.section-divider::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 50%, rgba(139,157,119,0.15) 0%, transparent 60%); pointer-events: none; }
+.tag { display: inline-block; background: var(--sage-bg); color: var(--accent); padding: 0.15em 0.6em; border-radius: 20px; font-size: var(--small-size); font-weight: 500; }
+.tag-red { background: var(--red-bg); color: var(--red); }
+.tag-green { background: var(--green-bg); color: var(--green); }
+.page-num { position: absolute; bottom: 1rem; right: 1.5rem; font-size: var(--small-size); color: var(--sage-light); font-weight: 300; }
+.svg-container { display: flex; justify-content: center; align-items: center; padding: 1rem 0; }
+.svg-container svg { max-width: 100%; height: auto; }
+.flow-row { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+.flow-item { background: var(--card-bg); border-radius: 12px; padding: 0.5em 1em; box-shadow: var(--card-shadow); font-size: var(--small-size); font-weight: 500; text-align: center; }
+.flow-arrow { color: var(--sage); font-size: 1.2em; font-weight: 300; }
+.principle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--element-gap); }
+.principle-item { background: var(--card-bg); border-radius: 12px; padding: 0.8em; box-shadow: var(--card-shadow); text-align: center; }
+.principle-num { font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 300; color: var(--sage); }
+.cover-deco { position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(139,157,119,0.12) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(139,157,119,0.08) 0%, transparent 40%); pointer-events: none; }
+.cover-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(139,157,119,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(139,157,119,0.06) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+.nav-hint { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--dark); color: var(--white); padding: 0.4em 1.2em; border-radius: 20px; font-size: var(--small-size); opacity: 0.7; transition: opacity 1s; z-index: 100; }
+</style>
+</head>
+<body>
+
+<!-- ===== SLIDE 1: DAY 1 COVER ===== -->
+<div class="slide slide-center" style="background: var(--warm-bg);">
+  <div class="cover-deco"></div>
+  <div class="cover-grid"></div>
+  <div style="position:relative; z-index:1;">
+    <p class="label">Day 1 of 2 &mdash; 2025.04.10</p>
+    <h1>時間序列分析</h1>
+    <p class="subtitle" style="margin-top:0.3em;">AI 融入學術研究 &times; Vibe Coding 實作</p>
+    <div style="margin-top:2em; display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;">
+      <div>
+        <p style="font-size:var(--small-size); color:var(--sage);">業界講師</p>
+        <p style="font-size:var(--body-size); font-weight:500;">侯冠宇</p>
+        <p style="font-size:var(--small-size); color:var(--dark-soft);">喬泰科技 AI 系統架構師<br>高科大管院博士生</p>
+      </div>
+      <div>
+        <p style="font-size:var(--small-size); color:var(--sage);">授課教師</p>
+        <p style="font-size:var(--body-size); font-weight:500;">魏裕珍 教授</p>
+        <p style="font-size:var(--small-size); color:var(--dark-soft);">國立高雄科技大學</p>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">1 / 55</span>
+</div>
+
+<!-- ===== SLIDE 2: SELF-INTRO ===== -->
+<div class="slide">
+  <div class="slide-split">
+    <div class="panel panel-warm">
+      <p class="label">About Me</p>
+      <h2>跨界背景<br>金融 &times; AI</h2>
+      <p style="margin-top:1em;">同時身為博士生，理解你們的痛</p>
+    </div>
+    <div class="panel panel-sage">
+      <div style="display:flex; flex-direction:column; gap:var(--element-gap);">
+        <div class="card">
+          <h3>工作</h3>
+          <p>喬泰科技 AI 系統架構師</p>
+          <p>用科技方法解決金融問題</p>
+        </div>
+        <div class="card">
+          <h3>學術</h3>
+          <p>高科大管院博士生</p>
+          <p>研究方向：財務金融 &times; AI</p>
+        </div>
+        <div class="card">
+          <h3>今天的角色</h3>
+          <p>不是教你寫程式，而是教你<strong>用 AI 加速研究</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">2 / 55</span>
+</div>
+
+<!-- ===== SLIDE 3: TWO-DAY OVERVIEW ===== -->
+<div class="slide slide-content">
+  <p class="label">Course Overview</p>
+  <h2>兩天概覽</h2>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-sage" style="flex:1;">
+      <h3>Day 1 &mdash; 4/10</h3>
+      <p style="font-weight:500; color:var(--dark); margin:0.5em 0;">AI 輔助學術研究</p>
+      <ul>
+        <li>論文架構與題目發想</li>
+        <li>文獻搜尋一條龍工作流程</li>
+        <li>AI 輔助寫作四步驟</li>
+        <li>學術倫理與實作練習</li>
+      </ul>
+    </div>
+    <div class="card card-blue" style="flex:1;">
+      <h3>Day 2 &mdash; 4/17</h3>
+      <p style="font-weight:500; color:var(--dark); margin:0.5em 0;">Vibe Coding &times; Python</p>
+      <ul>
+        <li>ARIMA 完整實作（六步驟）</li>
+        <li>GARCH 波動度模型</li>
+        <li>VAR 多變量互動分析</li>
+        <li>驗證與論文整合</li>
+      </ul>
+    </div>
+  </div>
+  <span class="page-num">3 / 55</span>
+</div>
+
+<!-- ===== SLIDE 4: PAIN POINT ===== -->
+<div class="slide slide-center">
+  <p class="label">The PhD Struggle</p>
+  <div class="big-number">80%</div>
+  <h2 style="margin-top:0.3em;">博士生的痛苦來自這三件事</h2>
+  <div class="card-row" style="margin-top:1.5em;">
+    <div class="card" style="text-align:center;">
+      <h3>找題目</h3>
+      <p>不知道做什麼</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <h3>讀文獻</h3>
+      <p>讀不完、整理不了</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <h3>寫英文</h3>
+      <p>改了 87 次還被退</p>
+    </div>
+  </div>
+  <p style="margin-top:1.5em; font-weight:500; color:var(--sage);">今天的目標：讓 AI 幫你減少這 80% 的痛苦</p>
+  <span class="page-num">4 / 55</span>
+</div>
+
+<!-- ===== SLIDE 5: PAPER STRUCTURE ===== -->
+<div class="slide slide-content">
+  <p class="label">Paper Architecture</p>
+  <h2>學術論文的五大章節</h2>
+  <table style="margin-top:0.8em;">
+    <thead>
+      <tr><th>章節</th><th>回答的問題</th><th>常見痛點</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Introduction</strong></td><td>為什麼要做這個研究？</td><td>不知道怎麼鋪陳動機</td></tr>
+      <tr><td><strong>Literature Review</strong></td><td>前人做了什麼？缺口在哪？</td><td>文獻堆疊、缺乏邏輯</td></tr>
+      <tr><td><strong>Methodology</strong></td><td>你怎麼做的？為什麼？</td><td>方法描述不夠精確</td></tr>
+      <tr><td><strong>Results</strong></td><td>你發現了什麼？</td><td>圖表呈現、統計解讀</td></tr>
+      <tr><td><strong>Conclusion</strong></td><td>So what？</td><td>結論太空泛</td></tr>
+    </tbody>
+  </table>
+  <div class="quote-block" style="margin-top:1em;">
+    <em>Introduction 是論文的「電梯簡報」 &mdash; 30 秒內說服讀者你的研究值得看</em>
+  </div>
+  <span class="page-num">5 / 55</span>
+</div>
+
+<!-- ===== SLIDE 6: HOW TO FIND TOPICS ===== -->
+<div class="slide slide-content">
+  <p class="label">Research Topic</p>
+  <h2>怎麼想題目？</h2>
+  <div class="flow-row" style="margin:1em 0;">
+    <div class="flow-item">興趣 + 專長</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item">大量閱讀</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item">找到 Gap</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item">研究問題</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item">假說 &amp; 方法</div>
+  </div>
+  <h3>好題目的四個標準</h3>
+  <div class="principle-grid" style="margin:0.8em 0;">
+    <div class="principle-item"><div class="principle-num">1</div><p>有學術價值</p></div>
+    <div class="principle-item"><div class="principle-num">2</div><p>有資料可做</p></div>
+    <div class="principle-item"><div class="principle-num">3</div><p>你有能力做</p></div>
+    <div class="principle-item"><div class="principle-num">4</div><p>三年內做完</p></div>
+  </div>
+  <h3>時間序列範例題目</h3>
+  <div class="card-row">
+    <div class="card card-sage"><p>GARCH 模型在<strong>加密貨幣</strong>市場的波動度預測</p></div>
+    <div class="card card-sage"><p>COVID-19 對<strong>台股波動結構</strong>的衝擊 &mdash; 門檻 VAR 分析</p></div>
+    <div class="card card-sage"><p>聯準會升息對<strong>亞洲匯率</strong>的傳導效果 &mdash; VECM 分析</p></div>
+  </div>
+  <span class="page-num">6 / 55</span>
+</div>
+
+<!-- ===== SLIDE 7: SECTION DIVIDER ===== -->
+<div class="slide section-divider">
+  <p class="label">Session 1</p>
+  <h1>文獻搜尋全攻略</h1>
+  <p class="subtitle" style="color: var(--sage-light); margin-top:0.5em;">從 AI 工具到傳統方法的完整流程</p>
+  <span class="page-num" style="color:var(--sage-light);">7 / 55</span>
+</div>
+
+<!-- ===== SLIDE 8: LITERATURE WORKFLOW ===== -->
+<div class="slide slide-content">
+  <p class="label">Literature Workflow</p>
+  <h2>一條龍文獻搜尋流程</h2>
+  <div class="svg-container">
+    <svg viewBox="0 0 800 200" width="720" height="180">
+      <defs>
+        <marker id="arrow1" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#8B9D77"/></marker>
+      </defs>
+      <!-- Boxes -->
+      <rect x="10" y="60" width="130" height="80" rx="12" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="75" y="95" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Elicit</text>
+      <text x="75" y="115" text-anchor="middle" font-size="10" fill="#5A5A5A">用問題搜文獻</text>
+      <line x1="140" y1="100" x2="168" y2="100" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow1)"/>
+
+      <rect x="170" y="60" width="130" height="80" rx="12" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="235" y="90" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Semantic</text>
+      <text x="235" y="106" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Scholar</text>
+      <text x="235" y="126" text-anchor="middle" font-size="10" fill="#5A5A5A">引用網路追蹤</text>
+      <line x1="300" y1="100" x2="328" y2="100" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow1)"/>
+
+      <rect x="330" y="60" width="130" height="80" rx="12" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="395" y="90" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Science</text>
+      <text x="395" y="106" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Direct</text>
+      <text x="395" y="126" text-anchor="middle" font-size="10" fill="#5A5A5A">下載全文 PDF</text>
+      <line x1="460" y1="100" x2="488" y2="100" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow1)"/>
+
+      <rect x="490" y="60" width="130" height="80" rx="12" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="555" y="95" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">SciSpace</text>
+      <text x="555" y="115" text-anchor="middle" font-size="10" fill="#5A5A5A">AI 讀論文</text>
+      <line x1="620" y1="100" x2="648" y2="100" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow1)"/>
+
+      <rect x="650" y="60" width="140" height="80" rx="12" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="720" y="90" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Research</text>
+      <text x="720" y="106" text-anchor="middle" font-size="14" font-weight="600" fill="#3D3D3D">Rabbit</text>
+      <text x="720" y="126" text-anchor="middle" font-size="10" fill="#5A5A5A">擴展閱讀清單</text>
+
+      <!-- Labels -->
+      <text x="75" y="45" text-anchor="middle" font-size="11" fill="#8B9D77" font-weight="500">Step 1</text>
+      <text x="235" y="45" text-anchor="middle" font-size="11" fill="#8B9D77" font-weight="500">Step 2</text>
+      <text x="395" y="45" text-anchor="middle" font-size="11" fill="#8B9D77" font-weight="500">Step 3</text>
+      <text x="555" y="45" text-anchor="middle" font-size="11" fill="#8B9D77" font-weight="500">Step 4</text>
+      <text x="720" y="45" text-anchor="middle" font-size="11" fill="#8B9D77" font-weight="500">Step 5</text>
+
+      <text x="400" y="175" text-anchor="middle" font-size="12" fill="#5A5A5A" font-style="italic">找 &rarr; 追 &rarr; 下載 &rarr; 讀 &rarr; 擴展</text>
+    </svg>
+  </div>
+  <span class="page-num">8 / 55</span>
+</div>
+
+<!-- ===== SLIDE 9: ELICIT ===== -->
+<div class="slide slide-content">
+  <p class="label">Step 1</p>
+  <h2>Elicit &mdash; 用研究問題搜文獻</h2>
+  <div class="card card-sage" style="margin:0.8em 0;">
+    <p><strong>不是打關鍵字，而是打研究問題</strong></p>
+    <div class="code-block" style="margin-top:0.8em;">How does GARCH model perform in cryptocurrency volatility forecasting?</div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>自動提取</h3>
+      <ul>
+        <li>研究方法</li>
+        <li>樣本 / 資料</li>
+        <li>主要發現</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>免費版功能</h3>
+      <ul>
+        <li>無限搜尋</li>
+        <li>摘要閱讀</li>
+        <li>文獻比較表</li>
+      </ul>
+    </div>
+  </div>
+  <span class="page-num">9 / 55</span>
+</div>
+
+<!-- ===== SLIDE 10: SEMANTIC SCHOLAR ===== -->
+<div class="slide slide-content">
+  <p class="label">Step 2</p>
+  <h2>Semantic Scholar &mdash; TLDR + 引用網路</h2>
+  <div class="card-row" style="margin:0.8em 0;">
+    <div class="card card-sage">
+      <h3>TLDR 功能</h3>
+      <p>每篇論文<strong>一句話摘要</strong></p>
+      <p>快速掃過 20 篇，篩出值得精讀的文獻</p>
+    </div>
+    <div class="card card-blue">
+      <h3>引用追蹤</h3>
+      <p>從 Engle (1982) ARCH 原始論文出發</p>
+      <p>追蹤 cited by &rarr; 看到整個 <strong>GARCH 家族</strong>的演化脈絡</p>
+    </div>
+  </div>
+  <div class="quote-block">
+    <em>時間序列領域特別適合引用追蹤 &mdash; 從 ARCH &rarr; GARCH &rarr; EGARCH &rarr; GARCH-MIDAS，一脈相承</em>
+  </div>
+  <p style="margin-top:0.5em;">完全免費，無需訂閱</p>
+  <span class="page-num">10 / 55</span>
+</div>
+
+<!-- ===== SLIDE 11: SCIENCEDIRECT ===== -->
+<div class="slide">
+  <div class="slide-split">
+    <div class="panel panel-warm">
+      <p class="label">Step 3</p>
+      <h2>ScienceDirect<br>下載全文</h2>
+      <p style="margin-top:1em;">學校有訂閱，校內網路可直接下載 PDF</p>
+      <ul style="margin-top:0.8em;">
+        <li>關鍵字搜尋 + 年份篩選</li>
+        <li>期刊 / 主題分類</li>
+        <li>完整全文 PDF 下載</li>
+      </ul>
+    </div>
+    <div class="panel panel-sage">
+      <p class="label">Step 4</p>
+      <h2>SciSpace<br>AI 讀論文</h2>
+      <p style="margin-top:1em;">上傳 PDF，用中文問問題</p>
+      <div class="code-block" style="margin-top:0.8em;">上傳 GARCH-MIDAS 論文後問：
+「這篇的 MIDAS 部分怎麼設定？
+  低頻變數用了什麼？」</div>
+      <p style="margin-top:0.5em; font-size:var(--small-size);">免費版每日有使用上限</p>
+    </div>
+  </div>
+  <span class="page-num">11 / 55</span>
+</div>
+
+<!-- ===== SLIDE 12: RESEARCH RABBIT ===== -->
+<div class="slide">
+  <div class="slide-split">
+    <div class="panel panel-sage">
+      <p class="label">Step 5</p>
+      <h2>Research Rabbit<br>文獻推薦</h2>
+      <p style="margin-top:1em;">像文獻版的 Spotify</p>
+      <ul style="margin-top:0.8em;">
+        <li>給它幾篇<strong>種子論文</strong></li>
+        <li>AI 推薦相關文獻</li>
+        <li>視覺化文獻網路</li>
+        <li>免費版功能充足</li>
+      </ul>
+    </div>
+    <div class="panel panel-warm">
+      <h3>傳統方法不能丟</h3>
+      <div style="display:flex; flex-direction:column; gap:var(--element-gap); margin-top:1em;">
+        <div class="card"><p><strong>Google Scholar</strong> &mdash; 最廣的搜尋範圍</p></div>
+        <div class="card"><p><strong>JCR / Impact Factor</strong> &mdash; 判斷期刊品質</p></div>
+        <div class="card"><p><strong>引用追蹤法</strong> &mdash; 往前追 reference、往後追 cited by</p></div>
+      </div>
+      <div class="quote-block" style="margin-top:1em;">
+        <em>AI 工具是加速器，不是替代品</em>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">12 / 55</span>
+</div>
+
+<!-- ===== SLIDE 13: WORKFLOW SUMMARY ===== -->
+<div class="slide slide-center">
+  <p class="label">Quick Recap</p>
+  <h2>記住這個流程</h2>
+  <div class="flow-row" style="margin:1.5em 0; font-size:var(--body-size);">
+    <div class="flow-item" style="background:var(--sage-bg);">Elicit<br><span style="font-size:var(--small-size);">找</span></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item" style="background:var(--sage-bg);">Semantic Scholar<br><span style="font-size:var(--small-size);">追</span></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item" style="background:var(--sage-bg);">ScienceDirect<br><span style="font-size:var(--small-size);">下載</span></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item" style="background:var(--sage-bg);">SciSpace<br><span style="font-size:var(--small-size);">讀</span></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-item" style="background:var(--sage-bg);">Research Rabbit<br><span style="font-size:var(--small-size);">擴展</span></div>
+  </div>
+  <p>AI 幫你加速「找」和「整理」<br>但「理解」和「批判」是你的工作</p>
+  <span class="page-num">13 / 55</span>
+</div>
+
+<!-- ===== SLIDE 14: SECTION DIVIDER - SESSION 2 ===== -->
+<div class="slide section-divider">
+  <p class="label">Session 2</p>
+  <h1>AI 輔助學術研究實作</h1>
+  <p class="subtitle" style="color: var(--sage-light); margin-top:0.5em;">文獻整理、論文撰寫、AI 審稿</p>
+  <span class="page-num" style="color:var(--sage-light);">14 / 55</span>
+</div>
+
+<!-- ===== SLIDE 15: ANTIGRAVITY INTRO ===== -->
+<div class="slide slide-content">
+  <p class="label">Tool</p>
+  <h2>Google Antigravity</h2>
+  <p>Vibe Coding 平台 &mdash; 免費、免安裝、瀏覽器直接用</p>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-sage">
+      <h3>左側</h3>
+      <p>程式碼 / 文件區域</p>
+    </div>
+    <div class="card card-sage">
+      <h3>右側</h3>
+      <p>對話面板 &mdash; 下指令的地方</p>
+    </div>
+    <div class="card card-sage">
+      <h3>Artifacts</h3>
+      <p>AI 產出的圖表和結果</p>
+    </div>
+  </div>
+  <div class="quote-block" style="margin-top:1em;">
+    <em>今天 Day 1 用它做文獻整理和寫作；Day 2 用它跑時間序列模型</em>
+  </div>
+  <span class="page-num">15 / 55</span>
+</div>
+
+<!-- ===== SLIDE 16: DEMO 1 - LITERATURE TABLE ===== -->
+<div class="slide slide-content">
+  <p class="label">Demo 1</p>
+  <h2>AI 輔助文獻整理</h2>
+  <p>假設你已用 Elicit 找到 5 篇 GARCH 文獻，接下來要整理比較表</p>
+  <div class="code-block" style="margin:0.8em 0;">請幫我整理以下 5 篇文獻的比較表，
+欄位包括：作者/年份、研究問題、研究方法、樣本/資料、主要發現、研究限制。
+
+[貼上 5 篇論文的標題和摘要]</div>
+  <h3>進階 &mdash; 找 Research Gap</h3>
+  <div class="code-block" style="margin-top:0.5em;">根據上面的文獻比較表，
+請指出目前 GARCH 模型相關文獻的研究缺口（research gap），
+並建議 2-3 個可能的研究方向。</div>
+  <span class="page-num">16 / 55</span>
+</div>
+
+<!-- ===== SLIDE 17: TRAP VS FIX 1 ===== -->
+<div class="slide slide-content">
+  <p class="label">Pitfall</p>
+  <h2>踩雷 vs 修正</h2>
+  <div class="compare-row" style="margin-top:1em;">
+    <div class="compare-col">
+      <div class="card card-red" style="height:100%;">
+        <p class="tag tag-red">踩雷</p>
+        <div class="code-block" style="margin:0.5em 0;">幫我做 GARCH 的文獻回顧</div>
+        <p>AI 自己「編」出不存在的文獻<br>作者名字像真的，但根本是<strong>幻覺</strong></p>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="card card-green" style="height:100%;">
+        <p class="tag tag-green">修正</p>
+        <div class="code-block" style="margin:0.5em 0;">根據以下 5 篇文獻的摘要，
+整理比較表並指出研究缺口
+
+[貼上具體文獻]</div>
+        <p>提供具體文獻讓 AI 整理<br>避免幻覺問題</p>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">17 / 55</span>
+</div>
+
+<!-- ===== SLIDE 18: KEY INSIGHT ===== -->
+<div class="slide slide-center">
+  <p class="label">Key Insight</p>
+  <h2>AI 能<em>整理</em>，不能<em>找</em></h2>
+  <div class="card-row" style="margin-top:1.5em;">
+    <div class="card card-green">
+      <h3>找文獻</h3>
+      <p>用專業工具<br>Elicit、Semantic Scholar</p>
+    </div>
+    <div class="card card-sage">
+      <h3>整理文獻</h3>
+      <p>用 AI<br>比較表、摘要、Gap 分析</p>
+    </div>
+  </div>
+  <span class="page-num">18 / 55</span>
+</div>
+
+<!-- ===== SLIDE 19: DEMO 2 - FOUR STEPS ===== -->
+<div class="slide slide-content">
+  <p class="label">Demo 2</p>
+  <h2>AI 輔助論文撰寫 &mdash; 四步驟潤稿流程</h2>
+  <div class="svg-container">
+    <svg viewBox="0 0 750 80" width="700" height="75">
+      <defs><marker id="arrow2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#8B9D77"/></marker></defs>
+      <rect x="0" y="15" width="145" height="50" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="72" y="42" text-anchor="middle" font-size="13" font-weight="500" fill="#3D3D3D">Step 1</text>
+      <text x="72" y="56" text-anchor="middle" font-size="11" fill="#5A5A5A">中文初稿</text>
+      <line x1="145" y1="40" x2="175" y2="40" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow2)"/>
+      <rect x="177" y="15" width="145" height="50" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="249" y="42" text-anchor="middle" font-size="13" font-weight="500" fill="#3D3D3D">Step 2</text>
+      <text x="249" y="56" text-anchor="middle" font-size="11" fill="#5A5A5A">翻譯成學術英文</text>
+      <line x1="322" y1="40" x2="352" y2="40" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow2)"/>
+      <rect x="354" y="15" width="145" height="50" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="426" y="42" text-anchor="middle" font-size="13" font-weight="500" fill="#3D3D3D">Step 3</text>
+      <text x="426" y="56" text-anchor="middle" font-size="11" fill="#5A5A5A">SSCI 潤稿</text>
+      <line x1="499" y1="40" x2="529" y2="40" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow2)"/>
+      <rect x="531" y="15" width="145" height="50" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="603" y="42" text-anchor="middle" font-size="13" font-weight="500" fill="#3D3D3D">Step 4</text>
+      <text x="603" y="56" text-anchor="middle" font-size="11" fill="#5A5A5A">APA 格式</text>
+    </svg>
+  </div>
+  <div class="code-block" style="font-size:var(--small-size);"><span class="comment">// Step 1：中文初稿</span>
+我的研究主題是「GARCH 模型在加密貨幣市場的波動度預測」。
+請幫我撰寫 Introduction 的第一段（約 200 字中文），
+包含：研究背景、為什麼重要、文獻不足、本研究目的。</div>
+  <span class="page-num">19 / 55</span>
+</div>
+
+<!-- ===== SLIDE 20: FOUR STEPS (CONTINUED) ===== -->
+<div class="slide slide-content">
+  <p class="label">Demo 2 (cont.)</p>
+  <h2>Step 2-4 Prompt 範例</h2>
+  <div class="code-block" style="margin:0.5em 0; font-size:var(--small-size);"><span class="comment">// Step 2：翻譯</span>
+請將上面的中文段落翻譯成學術英文，使用正式的學術語氣。</div>
+  <div class="code-block" style="margin:0.5em 0; font-size:var(--small-size);"><span class="comment">// Step 3：潤稿</span>
+請以學術寫作專家的角色，潤飾上面的英文段落。
+注意：(1) 語氣要正式 (2) 避免口語化表達
+(3) 邏輯連接要自然 (4) 符合 SSCI 期刊的寫作水準。</div>
+  <div class="code-block" style="margin:0.5em 0; font-size:var(--small-size);"><span class="comment">// Step 4：APA 格式</span>
+請幫我將以下文獻轉換成 APA 7th Edition 格式：
+作者：Engle, R. F. / 年份：1982
+標題：Autoregressive Conditional Heteroscedasticity with Estimates
+of the Variance of United Kingdom Inflation
+期刊：Econometrica, 50(4), 987-1007</div>
+  <span class="page-num">20 / 55</span>
+</div>
+
+<!-- ===== SLIDE 21: TRAP VS FIX 2 ===== -->
+<div class="slide slide-content">
+  <p class="label">Pitfall</p>
+  <h2>翻譯 Prompt 的踩雷 vs 修正</h2>
+  <div class="compare-row" style="margin-top:1em;">
+    <div class="compare-col">
+      <div class="card card-red" style="height:100%;">
+        <p class="tag tag-red">踩雷</p>
+        <div class="code-block" style="margin:0.5em 0;">幫我翻譯成英文</div>
+        <p>沒指定語氣 &rarr; 翻出來像 Google 翻譯，太口語</p>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="card card-green" style="height:100%;">
+        <p class="tag tag-green">修正</p>
+        <div class="code-block" style="margin:0.5em 0;">翻譯成學術英文，
+使用正式語氣，
+符合 SSCI 期刊水準</div>
+        <p>指定<strong>學術英文</strong>、<strong>正式語氣</strong>、<strong>SSCI 水準</strong></p>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">21 / 55</span>
+</div>
+
+<!-- ===== SLIDE 22: DEMO 3 - AI REVIEWER ===== -->
+<div class="slide slide-content">
+  <p class="label">Demo 3</p>
+  <h2>AI 審稿者 &mdash; 投稿前品質檢查</h2>
+  <div class="code-block" style="margin:0.8em 0;">你是一位 SSCI 期刊的匿名審稿者，
+專長是財務時間序列與波動度模型。
+請審閱以下段落，並給出：
+1. 整體評價（Strong Accept / Accept / Revise / Reject）
+2. 3 個具體的修改建議
+3. 邏輯或論述上的弱點
+
+[貼上段落]</div>
+  <div class="quote-block">
+    <em>AI 審稿不能取代 peer review，但可以幫你做初步品質檢查</em>
+  </div>
+  <span class="page-num">22 / 55</span>
+</div>
+
+<!-- ===== SLIDE 23: ACADEMIC ETHICS ===== -->
+<div class="slide slide-content">
+  <p class="label">Ethics</p>
+  <h2>學術倫理 &mdash; 紅線在哪？</h2>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-green">
+      <h3>合理使用</h3>
+      <ul>
+        <li>潤稿、翻譯、語法修正</li>
+        <li>格式轉換（APA）</li>
+        <li>摘要整理</li>
+        <li>模擬審稿</li>
+      </ul>
+    </div>
+    <div class="card card-red">
+      <h3>紅線</h3>
+      <ul>
+        <li>直接提交 AI 生成的內容</li>
+        <li>引用幻覺文獻</li>
+        <li>隱瞞 AI 使用</li>
+        <li>讓 AI 決定研究方向</li>
+      </ul>
+    </div>
+  </div>
+  <div class="quote-block" style="margin-top:1em;">
+    <em>一句話總結：AI 是寫作助理，不是寫作代理</em>
+  </div>
+  <span class="page-num">23 / 55</span>
+</div>
+
+<!-- ===== SLIDE 24: SECTION DIVIDER - SESSION 3 ===== -->
+<div class="slide section-divider">
+  <p class="label">Session 3</p>
+  <h1>實作練習</h1>
+  <p class="subtitle" style="color: var(--sage-light); margin-top:0.5em;">用自己的研究主題操作</p>
+  <span class="page-num" style="color:var(--sage-light);">24 / 55</span>
+</div>
+
+<!-- ===== SLIDE 25: THREE TASKS ===== -->
+<div class="slide slide-content">
+  <p class="label">Hands-on</p>
+  <h2>三大實作任務</h2>
+  <div style="display:flex; flex-direction:column; gap:var(--element-gap); margin-top:1em;">
+    <div class="card card-sage">
+      <h3>任務 1：文獻比較表</h3>
+      <p>用 AI 整理 3-5 篇<strong>你已經讀過的</strong>文獻比較表 + 找 Research Gap</p>
+    </div>
+    <div class="card card-sage">
+      <h3>任務 2：Introduction 段落</h3>
+      <p>四步驟流程：中文初稿 &rarr; 翻譯 &rarr; 潤稿 &rarr; 確認引用</p>
+    </div>
+    <div class="card card-sage">
+      <h3>任務 3：AI 審稿</h3>
+      <p>用 AI 審稿者檢視你的段落，根據建議修改</p>
+    </div>
+  </div>
+  <div class="quote-block" style="margin-top:1em;">
+    <em>產出可直接用在期末報告或論文裡 &mdash; 不是練完就丟的作業</em>
+  </div>
+  <span class="page-num">25 / 55</span>
+</div>
+
+<!-- ===== SLIDE 26: VIBE CODING PREVIEW ===== -->
+<div class="slide slide-content">
+  <p class="label">Preview</p>
+  <h2>Vibe Coding 快速體驗 &mdash; 預告 Day 2</h2>
+  <div class="code-block" style="margin:0.8em 0;">請生成一組台股加權指數的模擬日報酬率
+（250 個交易日，常態分配，平均 0.03%，標準差 1.2%）。
+畫出時序圖、直方圖，做 ADF 單根檢定，
+告訴我這組資料是否為定態。</div>
+  <div class="card" style="margin-top:0.8em;">
+    <p><strong>你沒寫任何 Python</strong>，但 AI 幫你：</p>
+    <ul>
+      <li>生成了模擬資料</li>
+      <li>畫了時序圖和直方圖</li>
+      <li>跑了 ADF 統計檢定</li>
+    </ul>
+  </div>
+  <p style="margin-top:0.8em; color:var(--sage); font-weight:500;">明天 Day 2 &rarr; 用真實資料做完整的 ARIMA、GARCH、VAR</p>
+  <span class="page-num">26 / 55</span>
+</div>
+
+<!-- ===== SLIDE 27: DAY 1 SUMMARY ===== -->
+<div class="slide slide-center">
+  <p class="label">Day 1 Summary</p>
+  <h2>今天學了三件事</h2>
+  <div class="principle-grid" style="margin-top:1.5em; max-width:700px;">
+    <div class="principle-item">
+      <div class="principle-num">1</div>
+      <h3>一條龍</h3>
+      <p style="font-size:var(--small-size);">Elicit &rarr; Semantic Scholar &rarr; ScienceDirect &rarr; SciSpace &rarr; Research Rabbit</p>
+    </div>
+    <div class="principle-item">
+      <div class="principle-num">2</div>
+      <h3>四步驟</h3>
+      <p style="font-size:var(--small-size);">中文初稿 &rarr; 翻譯 &rarr; 潤稿 &rarr; APA / AI 審稿</p>
+    </div>
+    <div class="principle-item">
+      <div class="principle-num">3</div>
+      <h3>核心原則</h3>
+      <p style="font-size:var(--small-size);">AI 是助理，不是代理</p>
+    </div>
+  </div>
+  <p style="margin-top:2em; color:var(--sage); font-weight:500;">明天 Day 2 &mdash; Vibe Coding &times; 時間序列模型</p>
+  <span class="page-num">27 / 55</span>
+</div>
+
+<!-- ===== SLIDE 28: DAY 2 COVER ===== -->
+<div class="slide slide-center" style="background: var(--warm-bg);">
+  <div class="cover-deco"></div>
+  <div class="cover-grid"></div>
+  <div style="position:relative; z-index:1;">
+    <p class="label">Day 2 of 2 &mdash; 2025.04.17</p>
+    <h1>時間序列分析</h1>
+    <p class="subtitle" style="margin-top:0.3em;">Vibe Coding &times; Python 時間序列模型</p>
+    <div style="margin-top:1.5em;">
+      <p style="font-size:var(--body-size); color:var(--dark-soft);">ARIMA &middot; GARCH &middot; VAR</p>
+    </div>
+    <div style="margin-top:2em; display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;">
+      <div>
+        <p style="font-size:var(--small-size); color:var(--sage);">業界講師</p>
+        <p style="font-size:var(--body-size); font-weight:500;">侯冠宇</p>
+      </div>
+      <div>
+        <p style="font-size:var(--small-size); color:var(--sage);">授課教師</p>
+        <p style="font-size:var(--body-size); font-weight:500;">魏裕珍 教授</p>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">28 / 55</span>
+</div>
+
+<!-- ===== SLIDE 29: DAY 1 RECAP + VIBE CODING ===== -->
+<div class="slide slide-content">
+  <p class="label">Day 1 Recap + Vibe Coding</p>
+  <h2>Day 1 回顧 &amp; Vibe Coding 正式介紹</h2>
+  <div class="card-row" style="margin:0.8em 0;">
+    <div class="card card-sage">
+      <h3>Day 1 回顧</h3>
+      <ul>
+        <li>文獻搜尋一條龍</li>
+        <li>AI 輔助寫作四步驟</li>
+        <li>AI 是助理不是代理</li>
+      </ul>
+    </div>
+    <div class="card card-blue">
+      <h3>Vibe Coding 是什麼？</h3>
+      <p>用<strong>自然語言</strong>驅動程式開發</p>
+      <p>不用自己寫 Python<br>用中文告訴 AI 你想做什麼分析</p>
+    </div>
+  </div>
+  <div class="quote-block" style="margin-top:0.5em;">
+    <em>不是取代你學 Python，而是讓你「快速驗證想法」&mdash; 腦中有假說，5 分鐘內看到初步結果</em>
+  </div>
+  <span class="page-num">29 / 55</span>
+</div>
+
+<!-- ===== SLIDE 30: ANTIGRAVITY DEEP DIVE ===== -->
+<div class="slide slide-content">
+  <p class="label">Tool</p>
+  <h2>Antigravity 深入介紹</h2>
+  <div class="card-row" style="margin:1em 0;">
+    <div class="card">
+      <h3>Editor View</h3>
+      <p>看 AI 生成的程式碼<br>可以檢查、修改</p>
+    </div>
+    <div class="card">
+      <h3>對話面板</h3>
+      <p>下指令的地方<br>用中文對話即可</p>
+    </div>
+    <div class="card">
+      <h3>Artifacts</h3>
+      <p>AI 產出的圖表和結果<br>可直接下載</p>
+    </div>
+  </div>
+  <div class="card card-red" style="margin-top:0.5em;">
+    <p><strong>提醒</strong>：AI 生成的程式碼可能有 bug，統計結果要自己驗證。等一下會教怎麼驗證。</p>
+  </div>
+  <span class="page-num">30 / 55</span>
+</div>
+
+<!-- ===== SLIDE 31: SECTION DIVIDER - ARIMA ===== -->
+<div class="slide section-divider">
+  <p class="label">Session 4</p>
+  <h1>ARIMA 分析</h1>
+  <p class="subtitle" style="color: var(--sage-light); margin-top:0.5em;">六步驟完整實作 &mdash; 全程 Prompt</p>
+  <span class="page-num" style="color:var(--sage-light);">31 / 55</span>
+</div>
+
+<!-- ===== SLIDE 32: ARIMA FULL FLOW ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Pipeline</p>
+  <h2>ARIMA 全流程概覽</h2>
+  <div class="svg-container">
+    <svg viewBox="0 0 800 200" width="750" height="185">
+      <defs><marker id="arrow3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#8B9D77"/></marker></defs>
+      <!-- Row 1 -->
+      <rect x="10" y="20" width="120" height="65" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="70" y="45" text-anchor="middle" font-size="12" font-weight="600" fill="#3D3D3D">Step 1</text>
+      <text x="70" y="62" text-anchor="middle" font-size="10" fill="#5A5A5A">資料載入</text>
+      <line x1="130" y1="52" x2="155" y2="52" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+      <rect x="157" y="20" width="120" height="65" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="217" y="45" text-anchor="middle" font-size="12" font-weight="600" fill="#3D3D3D">Step 2</text>
+      <text x="217" y="62" text-anchor="middle" font-size="10" fill="#5A5A5A">ADF 檢定</text>
+      <line x1="277" y1="52" x2="302" y2="52" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+      <rect x="304" y="20" width="120" height="65" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="364" y="45" text-anchor="middle" font-size="12" font-weight="600" fill="#3D3D3D">Step 3</text>
+      <text x="364" y="62" text-anchor="middle" font-size="10" fill="#5A5A5A">ACF / PACF</text>
+
+      <!-- Row 2 -->
+      <line x1="364" y1="85" x2="364" y2="110" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+      <rect x="304" y="112" width="120" height="65" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="364" y="137" text-anchor="middle" font-size="12" font-weight="600" fill="#3D3D3D">Step 4</text>
+      <text x="364" y="154" text-anchor="middle" font-size="10" fill="#5A5A5A">模型估計</text>
+      <line x1="424" y1="144" x2="449" y2="144" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+      <rect x="451" y="112" width="120" height="65" rx="10" fill="#EEF2EA" stroke="#8B9D77" stroke-width="1.5"/>
+      <text x="511" y="137" text-anchor="middle" font-size="12" font-weight="600" fill="#3D3D3D">Step 5</text>
+      <text x="511" y="154" text-anchor="middle" font-size="10" fill="#5A5A5A">殘差診斷</text>
+      <line x1="571" y1="144" x2="596" y2="144" stroke="#8B9D77" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+      <rect x="598" y="112" width="120" height="65" rx="10" fill="#8B9D77" stroke="#6B7F5B" stroke-width="1.5"/>
+      <text x="658" y="137" text-anchor="middle" font-size="12" font-weight="600" fill="#FFF">Step 6</text>
+      <text x="658" y="154" text-anchor="middle" font-size="10" fill="#EEF2EA">預測</text>
+    </svg>
+  </div>
+  <p style="text-align:center; color:var(--sage); font-weight:500;">EViews 20-30 分鐘 &rarr; Vibe Coding 約 5 分鐘</p>
+  <span class="page-num">32 / 55</span>
+</div>
+
+<!-- ===== SLIDE 33: ARIMA STEP 1 ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Step 1</p>
+  <h2>資料載入</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+請下載台股加權指數近 5 年的日收盤價，
+畫出時序圖，加中文標題「台股加權指數日收盤價」</div>
+  <div class="card" style="margin-top:1em;">
+    <p>以前你要：</p>
+    <ol>
+      <li>去 Yahoo Finance 下載 CSV</li>
+      <li>寫 <code>pd.read_csv()</code></li>
+      <li>寫 <code>plt.plot()</code></li>
+    </ol>
+    <p style="margin-top:0.5em;">現在<strong>一句話搞定</strong></p>
+  </div>
+  <span class="page-num">33 / 55</span>
+</div>
+
+<!-- ===== SLIDE 34: ARIMA STEP 2 ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Step 2</p>
+  <h2>ADF 單根檢定</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+對這組收盤價資料做 ADF 單根檢定，
+告訴我 test statistic、p-value，以及結論（是否為定態序列）</div>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-sage">
+      <h3>預期結果</h3>
+      <p>p-value &gt; 0.05<br>&rarr; 無法拒絕單根假設<br>&rarr; <strong>非定態</strong></p>
+    </div>
+    <div class="card">
+      <h3>解讀</h3>
+      <p>原始股價序列通常是非定態的<br>需要做差分處理<br>這就是 ARIMA 中 <em>d</em> 的來源</p>
+    </div>
+  </div>
+  <span class="page-num">34 / 55</span>
+</div>
+
+<!-- ===== SLIDE 35: ARIMA STEP 3 - ACF/PACF ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Step 3</p>
+  <h2>差分 + ACF / PACF</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+對收盤價做一階差分，
+然後畫差分後的 ACF 和 PACF 圖（各 30 個 lag），
+幫我判斷 ARIMA 的 p, d, q 應該是多少</div>
+  <div class="svg-container">
+    <svg viewBox="0 0 700 160" width="650" height="150">
+      <!-- ACF Mockup -->
+      <text x="170" y="15" text-anchor="middle" font-size="12" font-weight="500" fill="#3D3D3D">ACF</text>
+      <rect x="20" y="20" width="300" height="120" rx="8" fill="white" stroke="#E0E0E0"/>
+      <line x1="40" y1="80" x2="300" y2="80" stroke="#CCC" stroke-width="0.5"/>
+      <line x1="40" y1="60" x2="300" y2="60" stroke="#8B9D77" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="40" y1="100" x2="300" y2="100" stroke="#8B9D77" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="50" y1="80" x2="50" y2="35" stroke="#5B7F9D" stroke-width="3"/>
+      <line x1="65" y1="80" x2="65" y2="55" stroke="#5B7F9D" stroke-width="3"/>
+      <line x1="80" y1="80" x2="80" y2="65" stroke="#5B7F9D" stroke-width="3"/>
+      <line x1="95" y1="80" x2="95" y2="75" stroke="#CCC" stroke-width="3"/>
+      <line x1="110" y1="80" x2="110" y2="76" stroke="#CCC" stroke-width="3"/>
+      <line x1="125" y1="80" x2="125" y2="78" stroke="#CCC" stroke-width="3"/>
+      <text x="170" y="135" text-anchor="middle" font-size="10" fill="#5A5A5A">Lag</text>
+
+      <!-- PACF Mockup -->
+      <text x="530" y="15" text-anchor="middle" font-size="12" font-weight="500" fill="#3D3D3D">PACF</text>
+      <rect x="380" y="20" width="300" height="120" rx="8" fill="white" stroke="#E0E0E0"/>
+      <line x1="400" y1="80" x2="660" y2="80" stroke="#CCC" stroke-width="0.5"/>
+      <line x1="400" y1="60" x2="660" y2="60" stroke="#8B9D77" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="400" y1="100" x2="660" y2="100" stroke="#8B9D77" stroke-width="0.5" stroke-dasharray="4"/>
+      <line x1="410" y1="80" x2="410" y2="38" stroke="#C0392B" stroke-width="3"/>
+      <line x1="425" y1="80" x2="425" y2="72" stroke="#CCC" stroke-width="3"/>
+      <line x1="440" y1="80" x2="440" y2="77" stroke="#CCC" stroke-width="3"/>
+      <line x1="455" y1="80" x2="455" y2="82" stroke="#CCC" stroke-width="3"/>
+      <text x="530" y="135" text-anchor="middle" font-size="10" fill="#5A5A5A">Lag</text>
+      <text x="350" y="80" text-anchor="middle" font-size="14" fill="#8B9D77" font-weight="300">&amp;</text>
+    </svg>
+  </div>
+  <p style="text-align:center;"><strong>你的工作</strong>：判斷 ACF 在第幾階截斷、PACF 在第幾階截斷 &mdash; 這個判斷是你的，不是 AI 的</p>
+  <span class="page-num">35 / 55</span>
+</div>
+
+<!-- ===== SLIDE 36: ARIMA STEP 4 ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Step 4</p>
+  <h2>模型估計</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+用 ARIMA(p,d,q) 估計模型（用你剛才建議的參數），
+顯示係數估計值、標準誤、p-value 和 AIC</div>
+  <div class="card" style="margin-top:1em;">
+    <h3>重點檢查</h3>
+    <ul>
+      <li><strong>係數的 p-value</strong> &mdash; 是否顯著？</li>
+      <li><strong>AIC</strong> &mdash; 越小越好，可比較不同模型規格</li>
+      <li><strong>常數項</strong> &mdash; 是否需要包含？</li>
+    </ul>
+  </div>
+  <span class="page-num">36 / 55</span>
+</div>
+
+<!-- ===== SLIDE 37: ARIMA STEP 5 ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Step 5</p>
+  <h2>殘差診斷 &mdash; 最容易被忽略的步驟</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+對殘差做 Ljung-Box 檢定（lag=10）和 Jarque-Bera 常態性檢定，
+畫殘差的 ACF 圖，判斷殘差是否為白噪音</div>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-sage">
+      <h3>Ljung-Box</h3>
+      <p>檢驗殘差是否有自相關<br>p-value &gt; 0.05 &rarr; OK</p>
+    </div>
+    <div class="card card-sage">
+      <h3>Jarque-Bera</h3>
+      <p>檢驗殘差是否常態分配<br>財務資料通常不通過</p>
+    </div>
+  </div>
+  <div class="card card-red" style="margin-top:0.5em;">
+    <p><strong>如果殘差不是白噪音，你的模型就是有問題的</strong> &mdash; 很多人跑完模型就直接看結果，不檢查殘差</p>
+  </div>
+  <span class="page-num">37 / 55</span>
+</div>
+
+<!-- ===== SLIDE 38: ARIMA STEP 6 - PREDICTION ===== -->
+<div class="slide slide-content">
+  <p class="label">ARIMA Step 6</p>
+  <h2>預測 &mdash; 未來 20 日含信賴區間</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+用這個模型預測未來 20 個交易日的收盤價，
+畫出預測圖，包含 95% 信賴區間</div>
+  <div class="svg-container">
+    <svg viewBox="0 0 700 200" width="650" height="185">
+      <rect x="20" y="10" width="660" height="180" rx="8" fill="white" stroke="#E0E0E0"/>
+      <!-- Historical line -->
+      <polyline points="40,140 80,130 120,120 160,135 200,110 240,100 280,95 320,105 360,90 400,85 440,80 480,75" fill="none" stroke="#3D3D3D" stroke-width="2"/>
+      <!-- Prediction line -->
+      <polyline points="480,75 510,72 540,70 570,68 600,66 630,65 650,64" fill="none" stroke="#8B9D77" stroke-width="2" stroke-dasharray="5"/>
+      <!-- Confidence interval -->
+      <polygon points="480,75 510,60 540,52 570,46 600,40 630,36 650,33 650,95 630,94 600,92 570,90 540,88 510,84 480,75" fill="rgba(139,157,119,0.15)" stroke="none"/>
+      <!-- Vertical divider -->
+      <line x1="480" y1="20" x2="480" y2="180" stroke="#8B9D77" stroke-width="1" stroke-dasharray="4"/>
+      <text x="300" y="170" text-anchor="middle" font-size="11" fill="#5A5A5A">歷史資料</text>
+      <text x="570" y="170" text-anchor="middle" font-size="11" fill="#8B9D77">預測區間</text>
+      <text x="620" y="30" text-anchor="middle" font-size="9" fill="#A8B896">95% CI</text>
+    </svg>
+  </div>
+  <span class="page-num">38 / 55</span>
+</div>
+
+<!-- ===== SLIDE 39: STUDENT FOLLOW ALONG ===== -->
+<div class="slide slide-center">
+  <p class="label">Your Turn</p>
+  <h2>學生跟做提示</h2>
+  <div class="card-row" style="margin-top:1.5em; max-width:700px;">
+    <div class="card card-sage" style="text-align:center;">
+      <h3>個股</h3>
+      <p>台積電、鴻海...</p>
+    </div>
+    <div class="card card-sage" style="text-align:center;">
+      <h3>匯率</h3>
+      <p>美元兌台幣...</p>
+    </div>
+    <div class="card card-sage" style="text-align:center;">
+      <h3>利率</h3>
+      <p>10 年期公債...</p>
+    </div>
+  </div>
+  <p style="margin-top:1.5em; color:var(--dark-soft);">用同樣的六步驟 Prompt，換成你研究的資料</p>
+  <p style="margin-top:0.5em;"><strong>重點</strong>：ACF/PACF 的判斷要自己做，不要全聽 AI 的</p>
+  <span class="page-num">39 / 55</span>
+</div>
+
+<!-- ===== SLIDE 40: SECTION DIVIDER - GARCH & VAR ===== -->
+<div class="slide section-divider">
+  <p class="label">Session 5</p>
+  <h1>GARCH 與 VAR 模型</h1>
+  <p class="subtitle" style="color: var(--sage-light); margin-top:0.5em;">從均值到波動度，從單變量到多變量</p>
+  <span class="page-num" style="color:var(--sage-light);">40 / 55</span>
+</div>
+
+<!-- ===== SLIDE 41: GARCH CONCEPT ===== -->
+<div class="slide">
+  <div class="slide-split">
+    <div class="panel panel-warm">
+      <p class="label">GARCH</p>
+      <h2>從均值到波動度</h2>
+      <p style="margin-top:1em;">ARIMA 預測價格的<strong>走向</strong><br>GARCH 分析價格的<strong>波動幅度</strong></p>
+      <div class="quote-block" style="margin-top:1em;">
+        <em>在財務領域，我們更關心的往往是「波動度」</em>
+      </div>
+    </div>
+    <div class="panel panel-sage">
+      <h3>波動群聚 Volatility Clustering</h3>
+      <p style="margin-top:0.8em;">報酬率不是均勻散佈的：</p>
+      <ul style="margin-top:0.5em;">
+        <li>有些時期波動很大（COVID-19）</li>
+        <li>有些時期相對平靜</li>
+        <li>大波動之後往往跟著大波動</li>
+      </ul>
+      <p style="margin-top:1em; font-weight:500; color:var(--accent);">這就是我們需要 GARCH 的原因</p>
+    </div>
+  </div>
+  <span class="page-num">41 / 55</span>
+</div>
+
+<!-- ===== SLIDE 42: GARCH STEP 1-2 ===== -->
+<div class="slide slide-content">
+  <p class="label">GARCH Step 1-2</p>
+  <h2>報酬率時序圖 + ARCH-LM 檢定</h2>
+  <div class="code-block" style="margin:0.5em 0;"><span class="comment"># Step 1：觀察波動群聚</span>
+計算台股加權指數的日報酬率（對數報酬率），
+畫出報酬率的時序圖，觀察是否有波動群聚現象</div>
+  <div class="code-block" style="margin:0.5em 0;"><span class="comment"># Step 2：ARCH 效果檢定</span>
+對報酬率做 ARCH-LM 檢定（lag=5），
+告訴我 p-value 和結論：是否存在 ARCH 效果</div>
+  <div class="card card-sage" style="margin-top:0.8em;">
+    <p>如果 p-value &lt; 0.05 &rarr; 存在 ARCH 效果 &rarr; 波動度會隨時間變化 &rarr; <strong>需要 GARCH</strong></p>
+  </div>
+  <span class="page-num">42 / 55</span>
+</div>
+
+<!-- ===== SLIDE 43: GARCH STEP 3 ===== -->
+<div class="slide slide-content">
+  <p class="label">GARCH Step 3</p>
+  <h2>GARCH(1,1) 估計</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+估計 GARCH(1,1) 模型，
+顯示 omega、alpha、beta 係數，以及 alpha + beta 的值</div>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card">
+      <h3>係數意義</h3>
+      <table style="box-shadow:none;">
+        <tr><td><strong>omega</strong></td><td>常數項（長期波動度）</td></tr>
+        <tr><td><strong>alpha</strong></td><td>ARCH 項（短期衝擊）</td></tr>
+        <tr><td><strong>beta</strong></td><td>GARCH 項（波動持續性）</td></tr>
+      </table>
+    </div>
+    <div class="card card-sage">
+      <h3>關鍵指標</h3>
+      <p style="font-size:var(--h3-size); font-weight:500; color:var(--accent); margin:0.5em 0;">alpha + beta &approx; 1</p>
+      <p>接近 1 = 高持續性<br>一旦市場劇烈波動<br>會持續好一陣子才平息</p>
+    </div>
+  </div>
+  <span class="page-num">43 / 55</span>
+</div>
+
+<!-- ===== SLIDE 44: GARCH STEP 4 - CONDITIONAL VOLATILITY ===== -->
+<div class="slide slide-content">
+  <p class="label">GARCH Step 4</p>
+  <h2>條件波動率圖</h2>
+  <div class="code-block" style="margin:0.5em 0;"><span class="comment"># Prompt</span>
+畫出條件波動率（conditional volatility）的時序圖，
+標註 2020 年 COVID-19 和 2022 年台海危機的時間點</div>
+  <div class="svg-container">
+    <svg viewBox="0 0 700 200" width="650" height="185">
+      <rect x="20" y="10" width="660" height="180" rx="8" fill="white" stroke="#E0E0E0"/>
+      <text x="350" y="30" text-anchor="middle" font-size="12" font-weight="500" fill="#3D3D3D">Conditional Volatility</text>
+      <!-- Baseline volatility -->
+      <polyline points="40,150 80,148 120,145 160,140 200,142 240,135 260,130" fill="none" stroke="#5A5A5A" stroke-width="1.5"/>
+      <!-- COVID-19 spike -->
+      <polyline points="260,130 280,90 300,50 320,45 340,55 360,70 380,85 400,100" fill="none" stroke="#C0392B" stroke-width="2"/>
+      <!-- Recovery -->
+      <polyline points="400,100 420,115 440,125 460,130 480,128" fill="none" stroke="#5A5A5A" stroke-width="1.5"/>
+      <!-- Taiwan Strait -->
+      <polyline points="480,128 500,110 520,80 540,75 560,90 580,105" fill="none" stroke="#5B7F9D" stroke-width="2"/>
+      <!-- Calm again -->
+      <polyline points="580,105 600,120 620,130 640,135 660,138" fill="none" stroke="#5A5A5A" stroke-width="1.5"/>
+      <!-- Annotations -->
+      <line x1="300" y1="40" x2="300" y2="180" stroke="#C0392B" stroke-width="0.5" stroke-dasharray="3"/>
+      <text x="300" y="175" text-anchor="middle" font-size="9" fill="#C0392B">COVID-19</text>
+      <line x1="520" y1="70" x2="520" y2="180" stroke="#5B7F9D" stroke-width="0.5" stroke-dasharray="3"/>
+      <text x="520" y="175" text-anchor="middle" font-size="9" fill="#5B7F9D">台海危機</text>
+    </svg>
+  </div>
+  <p style="text-align:center;">這張圖可以<strong>直接放進論文 Results</strong></p>
+  <span class="page-num">44 / 55</span>
+</div>
+
+<!-- ===== SLIDE 45: VAR CONCEPT ===== -->
+<div class="slide">
+  <div class="slide-split">
+    <div class="panel panel-warm">
+      <p class="label">VAR Model</p>
+      <h2>多變量互動</h2>
+      <p style="margin-top:1em;">ARIMA、GARCH 看<strong>一個</strong>變數<br>VAR 看<strong>多個變數</strong>之間的互動</p>
+      <div class="quote-block" style="margin-top:1em;">
+        <em>股市、匯率、利率之間<br>會互相影響嗎？</em>
+      </div>
+    </div>
+    <div class="panel panel-sage">
+      <h3>VAR 能回答的問題</h3>
+      <div style="display:flex; flex-direction:column; gap:var(--element-gap); margin-top:1em;">
+        <div class="card">
+          <p><strong>Granger 因果</strong><br>誰能預測誰？</p>
+        </div>
+        <div class="card">
+          <p><strong>衝擊反應 IRF</strong><br>一個衝擊持續多久？</p>
+        </div>
+        <div class="card">
+          <p><strong>變異數分解 FEVD</strong><br>影響力有多大？</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="page-num">45 / 55</span>
+</div>
+
+<!-- ===== SLIDE 46: VAR STEP 1-2 ===== -->
+<div class="slide slide-content">
+  <p class="label">VAR Step 1-2</p>
+  <h2>多變量資料準備 + Lag 選擇</h2>
+  <div class="code-block" style="margin:0.5em 0;"><span class="comment"># Step 1：多變量資料</span>
+請準備三組資料（近 5 年日資料）：
+1. 台股加權指數日報酬率
+2. 美元兌台幣匯率日變動率
+3. 台灣 10 年期公債殖利率日變動率
+畫出三組資料的時序圖</div>
+  <div class="code-block" style="margin:0.5em 0;"><span class="comment"># Step 2：估計模型</span>
+用 AIC 準則選擇最適落後期數，估計 VAR 模型，
+顯示選出的 lag 數和各方程式的係數摘要</div>
+  <span class="page-num">46 / 55</span>
+</div>
+
+<!-- ===== SLIDE 47: VAR STEP 3 - GRANGER ===== -->
+<div class="slide slide-content">
+  <p class="label">VAR Step 3</p>
+  <h2>Granger 因果檢定</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+做 Granger 因果檢定，檢驗：
+1. 匯率是否 Granger-cause 股市報酬
+2. 利率是否 Granger-cause 股市報酬
+3. 股市報酬是否 Granger-cause 匯率
+顯示 F-statistic 和 p-value</div>
+  <div class="card card-sage" style="margin-top:1em;">
+    <h3>重要觀念</h3>
+    <p><strong>Granger 因果 &ne; 真正因果</strong></p>
+    <p>它只是說：一個變數的<em>過去值</em>能不能幫助<em>預測</em>另一個變數</p>
+    <p>在時間序列分析裡，這已經是很有用的資訊</p>
+  </div>
+  <span class="page-num">47 / 55</span>
+</div>
+
+<!-- ===== SLIDE 48: VAR STEP 4 - IRF ===== -->
+<div class="slide slide-content">
+  <p class="label">VAR Step 4</p>
+  <h2>衝擊反應函數 IRF</h2>
+  <div class="code-block" style="margin:0.5em 0;"><span class="comment"># Prompt</span>
+畫出衝擊反應函數（IRF），
+觀察「匯率衝擊」對「股市報酬」的影響持續多久，
+包含 95% 信賴區間，期間設定 20 期</div>
+  <div class="svg-container">
+    <svg viewBox="0 0 700 200" width="650" height="185">
+      <rect x="20" y="10" width="660" height="180" rx="8" fill="white" stroke="#E0E0E0"/>
+      <text x="350" y="28" text-anchor="middle" font-size="11" font-weight="500" fill="#3D3D3D">IRF: 匯率衝擊 &rarr; 股市報酬</text>
+      <!-- Zero line -->
+      <line x1="60" y1="110" x2="660" y2="110" stroke="#CCC" stroke-width="0.5"/>
+      <text x="50" y="113" text-anchor="end" font-size="9" fill="#999">0</text>
+      <!-- Confidence interval -->
+      <polygon points="80,60 120,65 180,75 240,85 300,92 360,98 420,102 480,105 540,107 600,108 640,109 640,140 600,135 540,130 480,125 420,120 360,115 300,110 240,105 180,100 120,95 80,90" fill="rgba(139,157,119,0.15)" stroke="none"/>
+      <!-- IRF line -->
+      <polyline points="80,55 120,70 180,82 240,90 300,97 360,103 420,107 480,109 540,110 600,110 640,110" fill="none" stroke="#8B9D77" stroke-width="2"/>
+      <!-- Period labels -->
+      <text x="80" y="175" text-anchor="middle" font-size="9" fill="#999">0</text>
+      <text x="240" y="175" text-anchor="middle" font-size="9" fill="#999">5</text>
+      <text x="420" y="175" text-anchor="middle" font-size="9" fill="#999">10</text>
+      <text x="600" y="175" text-anchor="middle" font-size="9" fill="#999">15</text>
+      <text x="640" y="175" text-anchor="middle" font-size="9" fill="#999">20</text>
+      <text x="350" y="190" text-anchor="middle" font-size="10" fill="#5A5A5A">期數</text>
+    </svg>
+  </div>
+  <p style="text-align:center;">匯率貶值一個標準差後，股市反應多久？多少期回到零？</p>
+  <span class="page-num">48 / 55</span>
+</div>
+
+<!-- ===== SLIDE 49: VAR STEP 5 - FEVD ===== -->
+<div class="slide slide-content">
+  <p class="label">VAR Step 5</p>
+  <h2>變異數分解 FEVD</h2>
+  <div class="code-block" style="margin:0.8em 0;"><span class="comment"># Prompt</span>
+做預測誤差變異數分解（FEVD），期間 20 期，
+看股市報酬的預測誤差中，有多少比例來自匯率和利率的衝擊</div>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-sage">
+      <h3>量化影響力</h3>
+      <p>如果匯率解釋了股市報酬變異的 <strong>15%</strong></p>
+      <p>&rarr; 匯率對股市有<em>實質的影響力</em></p>
+    </div>
+    <div class="card">
+      <h3>比「有影響」更有說服力</h3>
+      <p>FEVD 給你<strong>具體數字</strong></p>
+      <p>不只是說「有影響」</p>
+      <p>而是告訴你「影響有多大」</p>
+    </div>
+  </div>
+  <span class="page-num">49 / 55</span>
+</div>
+
+<!-- ===== SLIDE 50: SECTION DIVIDER - SESSION 6 ===== -->
+<div class="slide section-divider">
+  <p class="label">Session 6</p>
+  <h1>進階應用與研究整合</h1>
+  <p class="subtitle" style="color: var(--sage-light); margin-top:0.5em;">驗證、論文整合、核心競爭力</p>
+  <span class="page-num" style="color:var(--sage-light);">50 / 55</span>
+</div>
+
+<!-- ===== SLIDE 51: VERIFY AI CODE ===== -->
+<div class="slide slide-content">
+  <p class="label">Verification</p>
+  <h2>驗證 AI 程式碼 &mdash; 三種方法</h2>
+  <div style="display:flex; flex-direction:column; gap:var(--element-gap); margin-top:1em;">
+    <div class="card card-sage">
+      <h3>方法 1：EViews / Matlab 交叉比對</h3>
+      <p>同樣的資料跑一遍，比較係數和 AIC &mdash; 小數點第三位可能有差，但量級和方向應一致</p>
+    </div>
+    <div class="card card-sage">
+      <h3>方法 2：檢查統計性質</h3>
+      <p>自由度對不對？AIC/BIC 合理嗎？殘差是不是白噪音？</p>
+    </div>
+    <div class="card card-sage">
+      <h3>方法 3：AI 自我檢查</h3>
+      <div class="code-block" style="margin-top:0.5em; font-size:var(--small-size);">請檢查上面的 GARCH(1,1) 程式碼，確認：
+1. 報酬率的計算方式是否正確（對數報酬率）
+2. 模型是否正確收斂
+3. alpha + beta 是否小於 1（定態條件）</div>
+    </div>
+  </div>
+  <span class="page-num">51 / 55</span>
+</div>
+
+<!-- ===== SLIDE 52: INTEGRATE INTO PAPER ===== -->
+<div class="slide slide-content">
+  <p class="label">Integration</p>
+  <h2>整合進論文</h2>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card">
+      <h3>圖表格式</h3>
+      <p><span class="tag">探索性</span> 隨便畫，給自己看</p>
+      <p><span class="tag tag-green">論文等級</span> 英文標題、軸標籤、300 dpi</p>
+      <div class="code-block" style="margin-top:0.5em; font-size:var(--small-size);">請將條件波動率圖調整為論文等級：
+- 字體 12pt、寬 8 英吋、高 5 英吋
+- 英文標題、軸標籤
+- 標註重大事件、300 dpi PNG</div>
+    </div>
+    <div class="card">
+      <h3>Methodology 描述</h3>
+      <ul>
+        <li>不要只寫「我用了 GARCH(1,1)」</li>
+        <li>說明<strong>為什麼選</strong> &mdash; ARCH-LM 檢定結果</li>
+        <li>AIC 比較不同規格</li>
+      </ul>
+      <h3 style="margin-top:0.8em;">程式碼可重現性</h3>
+      <ul>
+        <li>整理成乾淨的 Python 腳本</li>
+        <li>放在附錄或 GitHub</li>
+      </ul>
+    </div>
+  </div>
+  <span class="page-num">52 / 55</span>
+</div>
+
+<!-- ===== SLIDE 53: PhD CORE COMPETENCY ===== -->
+<div class="slide slide-content">
+  <p class="label">The Big Question</p>
+  <h2>AI 時代，博士生的核心競爭力在哪？</h2>
+  <div class="compare-row" style="margin-top:1em;">
+    <div class="compare-col">
+      <div class="card card-sage" style="height:100%;">
+        <h3>AI 能做的</h3>
+        <ul>
+          <li>寫程式</li>
+          <li>跑模型</li>
+          <li>畫圖</li>
+          <li>潤稿</li>
+        </ul>
+        <p style="margin-top:0.5em; font-size:var(--small-size); color:var(--dark-soft);">這些以前需要花大量時間學的技能，現在 AI 幾秒鐘搞定</p>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="card card-green" style="height:100%;">
+        <h3>你能做而 AI 不能做的</h3>
+        <ul>
+          <li><strong>問對問題</strong> &mdash; AI 不會想研究題目</li>
+          <li><strong>設計研究</strong> &mdash; 方法、資料、控制變數</li>
+          <li><strong>解讀結果</strong> &mdash; IRF 圖的經濟學意義</li>
+          <li><strong>批判性思考</strong> &mdash; 結果合理嗎？</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="quote-block" style="margin-top:1em;">
+    <em>你的價值不在「會寫 Python」&mdash; 而在「能提出有意義的研究問題，並做出嚴謹的學術判斷」</em>
+  </div>
+  <span class="page-num">53 / 55</span>
+</div>
+
+<!-- ===== SLIDE 54: FULL SUMMARY ===== -->
+<div class="slide slide-content">
+  <p class="label">Two-Day Summary</p>
+  <h2>兩天總回顧</h2>
+  <div class="card-row" style="margin-top:1em;">
+    <div class="card card-sage">
+      <h3>Day 1 &mdash; AI 輔助研究</h3>
+      <ol>
+        <li>文獻搜尋一條龍</li>
+        <li>AI 寫作四步驟</li>
+        <li>AI 是助理不是代理</li>
+      </ol>
+    </div>
+    <div class="card card-blue">
+      <h3>Day 2 &mdash; Vibe Coding</h3>
+      <ol>
+        <li>ARIMA 六步驟</li>
+        <li>GARCH 波動度分析</li>
+        <li>VAR 多變量互動</li>
+        <li>驗證 + 論文整合</li>
+      </ol>
+    </div>
+  </div>
+  <div class="principle-grid" style="margin-top:1em;">
+    <div class="principle-item">
+      <div class="principle-num" style="font-size:clamp(1.2rem,2vw,1.8rem);">AI</div>
+      <p>加速工具</p>
+    </div>
+    <div class="principle-item">
+      <div class="principle-num" style="font-size:clamp(1.2rem,2vw,1.8rem);">你</div>
+      <p>研究判斷</p>
+    </div>
+    <div class="principle-item">
+      <div class="principle-num" style="font-size:clamp(1.2rem,2vw,1.8rem);">驗證</div>
+      <p>不可省略</p>
+    </div>
+  </div>
+  <span class="page-num">54 / 55</span>
+</div>
+
+<!-- ===== SLIDE 55: THANK YOU ===== -->
+<div class="slide slide-center" style="background: var(--dark); color: var(--white);">
+  <div class="cover-deco"></div>
+  <div style="position:relative; z-index:1;">
+    <p class="label" style="color:var(--sage-light);">Thank You</p>
+    <h1 style="color: var(--white); font-weight:300;">祝論文順利<br>畢業順利</h1>
+    <div style="margin-top:2em;">
+      <p style="font-size:var(--body-size); color:var(--sage-light);">侯冠宇</p>
+      <p style="font-size:var(--small-size); color:var(--sage-light); margin-top:0.3em;">喬泰科技 AI 系統架構師 / 高科大管院博士生</p>
+    </div>
+    <p style="margin-top:2em; font-size:var(--small-size); color:var(--sage-light);">有問題隨時找我</p>
+  </div>
+  <span class="page-num" style="color:var(--sage-light);">55 / 55</span>
+</div>
+
+<!-- Navigation hint + JS -->
+<div class="nav-hint">&larr; &rarr; 鍵切換投影片</div>
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  function goTo(i) {
+    i = Math.max(0, Math.min(i, slides.length - 1));
+    slides[i].scrollIntoView({ behavior: 'smooth' });
+    current = i;
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
+  });
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) current = Array.from(slides).indexOf(e.target); });
+  }, { threshold: 0.5 });
+  slides.forEach(s => observer.observe(s));
+  setTimeout(() => { document.querySelector('.nav-hint').style.opacity = '0'; }, 5000);
+})();
+</script>
+
+</body>
+</html>
